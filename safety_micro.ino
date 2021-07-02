@@ -1,4 +1,4 @@
-/*
+ /*
  * A simple safety system.  6/16/2021, Noah Vawter for Andy Cavatorta Studios
  * It reads the input pin regularly, e.g. 100 Hz.
  * It expects the state of the input pin to change at least even N time units, e.g. at least 1x per second  
@@ -7,12 +7,13 @@
  */
 
 // Configuration
-#define INPUT_PIN  ( D0 )
-#define OUTPUT_PIN ( D1 )
+#define INPUT_PIN  ( D2 )
+#define OUTPUT_PIN ( D3 )
 float required_transition_window = 2.0f;  // seconds.  Input must change state within this window or else!
 
 HardwareTimer *MyTim = new HardwareTimer( TIM2 );
 
+int32_t input_pin_val;
 float   time_this_window   = 0.0f;
 float   interrupt_rate     = 100.0f;  // Hz
 float   interrupt_period   = 1.0f / interrupt_rate;
@@ -23,8 +24,6 @@ int32_t output_state       = 0;
 // Note: func argument not used
 void interrupt_routine( HardwareTimer *p_ht )
 {
-  int32_t input_pin_val;
-
   // Keep track of this time in this window
   time_this_window += interrupt_period;
 
@@ -56,6 +55,9 @@ void interrupt_routine( HardwareTimer *p_ht )
 
 void setup() 
 {
+  Serial.begin( 115200 );
+  Serial.println( "Hello world." );
+  
   // Input Pin
   pinMode( INPUT_PIN, INPUT_PULLDOWN  );
 
@@ -65,12 +67,21 @@ void setup()
   // Timer Interrupt
   MyTim->setOverflow( interrupt_rate, HERTZ_FORMAT);
   MyTim->attachInterrupt( interrupt_routine );
-  //MyTim->setMode(2, TIMER_OUTPUT_COMPARE);  // not needed in this app
+  MyTim->setMode(2, TIMER_OUTPUT_COMPARE);  // not needed in this app
   MyTim->resume();
 }
 
 
 void loop() 
 {
-  delay( 1000 );  // nothing to do in main while loop
+  delay( 200 );  // nothing to do in main while loop
+  Serial.print( input_pin_val );
+  Serial.print(", " );
+  Serial.print( input_state_prev );
+  Serial.print(", " );
+  Serial.print( time_this_window );
+  Serial.print(", " );
+  Serial.print( output_state);
+  Serial.print(", " );
+  Serial.println();
 }
